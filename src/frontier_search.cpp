@@ -6,6 +6,7 @@
 
 int i_fov_mid, j_fov_mid, i_fov_min, j_fov_min, i_fov_max, j_fov_max;
 
+
 namespace FrontierSearches
 {
 FrontierSearch::FrontierSearch(nav_msgs::OccupancyGrid &map, PoseHandlers::PoseHandler &pose_handler) : map_(map), pose_handler_(pose_handler) {}
@@ -34,7 +35,7 @@ std::vector<std::vector<std::pair<int, int>>> FrontierSearch::buildBidimensional
     for (int j = 0; j < height; j++)
     {
 
-      tf::Transform transform = pose_handler_.lookupPose("/map", "/imu");
+      tf::Transform transform = pose_handler_.lookupPose("map", "map");
       float pose_x = (transform.getOrigin().getX()) - 0.14;
       float pose_y = (transform.getOrigin().getY()) - 0.05;
       tf::Quaternion q1(
@@ -172,7 +173,6 @@ bool FrontierSearch::isFrontierCell(std::vector<std::vector<int>> grid, int w_in
    */
 bool FrontierSearch::isOnSameFrontier(std::vector<std::pair<int, int>> frontier, std::pair<int, int> candidate, float radius)
 {
-  std::cout << "ymid" << i_fov_mid << "," << j_fov_mid << std::endl;
   if (frontier.size() > 50)
     return false;
   for (std::pair<int, int> frontier_cell : frontier)

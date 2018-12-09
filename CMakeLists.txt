@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   actionlib
   tf
+  visualization_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -131,6 +132,7 @@ include_directories(
  add_library(frontier_detection_lib
    src/frontier_search.cpp
    src/pose_handler.cpp
+   src/visualize_points.cpp
 )
 
 
