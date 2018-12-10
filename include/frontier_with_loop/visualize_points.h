@@ -9,6 +9,7 @@ namespace VisualizePoints{
 	{
 	public:
 		VisualizePointer();
+		ros::Publisher marker_pub;
 		void visualize_lines(std::vector<std::pair<double, double>> points);
 	};
 

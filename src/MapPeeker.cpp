@@ -48,6 +48,7 @@ class Map
 			ROS_INFO("first: %f, second %f", coords.first, coords.second);
 		}
 		visualizationPointer.visualize_lines(centroidsTransformed);
+		ROS_INFO("hanwen");
 		
 	}
 };
