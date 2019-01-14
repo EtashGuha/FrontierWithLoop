@@ -12,9 +12,11 @@ class Map
 	float resolution;
 	int width;
 	int height;
+	bool what;
 	float origin_x;
 	float origin_y;
 	float origin_z;
+	bool always_send_full_costmap;
 	PoseHandlers::PoseHandler pose_handler;
 	std::vector<std::pair<int, int> > centroids;
 	std::vector<std::pair<int, int> > example;
@@ -23,18 +25,17 @@ class Map
 	std::vector<std::pair<double, double>> centroidsTransformed;
 
 	public:
-		void initMap(){
+		void initMap(){			
 			ros::NodeHandle n;
-			ros::Subscriber sub = n.subscribe("/move_base/global_costmap/costmap", 1000, &Map::callBack, this);	
-			ROS_INFO("Got here");
+			ros::Subscriber subFirst = n.subscribe("/move_base/global_costmap/costmap", 1, &Map::callBack, this);	
 			ros::spin();
 		}
 
 	void callBack(nav_msgs::OccupancyGrid grid){
+		centroidsTransformed.clear();
 		resolution = grid.info.resolution;
 		width = grid.info.width;
 		height = grid.info.height;
-		map = grid;
 		FrontierSearches::FrontierSearch frontier_search(grid, pose_handler);
 		frontiers = frontier_search.buildBidimensionalMap();
 		centroids = frontier_search.getCentroids(frontiers);
@@ -44,12 +45,7 @@ class Map
 		 	newCoords.second =  (double)coords.first * grid.info.resolution + grid.info.origin.position.y;
 			centroidsTransformed.push_back(newCoords);
 		}
-		for(std::pair<double, double> coords: centroidsTransformed){
-			ROS_INFO("first: %f, second %f", coords.first, coords.second);
-		}
 		visualizationPointer.visualize_lines(centroidsTransformed);
-		ROS_INFO("hanwen");
-		
 	}
 };
 
@@ -59,7 +55,6 @@ int main(int argc, char **argv){
 	ros::init(argc, argv, "MapPeeker");
 	Map map;
 	map.initMap();
-	ros::spin();
 	return 0;
 }
 
