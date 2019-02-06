@@ -11,9 +11,6 @@ namespace VisualizePoints{
 	}
 
 	void VisualizePointer::visualize_lines(std::vector<std::pair<double, double>> pointsToHighlight){
-			
-			ROS_INFO("VISUALIZING");
-
 			ros::Rate r(30);
 
 			float f = 0.0;

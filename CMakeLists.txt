@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   actionlib
   tf
   visualization_msgs
+  move_base_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -222,6 +223,15 @@ target_link_libraries(MapPeeker ${catkin_LIBRARIES})
 add_dependencies(MapPeeker frontier_with_loop_generate_messages_cpp)
 
 target_link_libraries(MapPeeker
+  ${catkin_LIBRARIES}
+  frontier_detection_lib
+)	
+
+add_executable(robot_pose src/robot_pose.cpp)
+target_link_libraries(robot_pose ${catkin_LIBRARIES})
+add_dependencies(robot_pose frontier_with_loop_generate_messages_cpp)
+
+target_link_libraries(robot_pose
   ${catkin_LIBRARIES}
   frontier_detection_lib
 )	
