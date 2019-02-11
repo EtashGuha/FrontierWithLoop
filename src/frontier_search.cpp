@@ -194,7 +194,7 @@ bool FrontierSearch::isOnSameFrontier(std::vector<std::pair<int, int>> frontier,
 std::vector<std::pair<int, int>> FrontierSearch::getCentroids(std::vector<std::vector<std::pair<int, int>>> frontiers)
 {
 
-  tf::Transform transform = pose_handler_.lookupPose("/map", "/imu");
+  tf::Transform transform = pose_handler_.lookupPose("/map", "/map");
   float pose_x = (transform.getOrigin().getX()) - 0.14;
   float pose_y = (transform.getOrigin().getY()) - 0.05;
   //  map_pose.first  = (pose_x/map_.info.resolution) + (map_.info.height/2);
