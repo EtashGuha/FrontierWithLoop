@@ -27,31 +27,51 @@ class Map {
 		std::vector<std::pair<double, double>> centroidsTransformed;
 		ros::Subscriber subFirst;
 		ros::Publisher goal_setter;
-		nav_msgs::OccupancyGrid map;
+		//nav_msgs::OccupancyGrid map;
 		ros::NodeHandle n;
+		MoveBaseClient ac;
+		ros::Timer timer;
+
+		Map();
 
 		void initMap();
 		void callBack(const nav_msgs::OccupancyGrid& grid);
 		void updateFrontiers();
-
-		Map(): map(){}
 };
+		
+		Map::Map():
+			n(),
+			ac(n, "move_base", true)
+		{
+
+		}
+
 		void Map::initMap(){
 			ROS_INFO("Starting first subcriber");
 			//subFirst = n.subscribe("/move_base/global_costmap/costmap", 1, &Map::callBack, this);
 			message_filters::Subscriber<nav_msgs::OccupancyGrid> sub(Map::n, "/move_base/global_costmap/costmap", 1);
 			message_filters::Cache<nav_msgs::OccupancyGrid> cache(sub, 100);
-			sub.registerCallback(Map::callBack);
+			//sub.registerCallback(&Map::callBack,this);
+			timer = nh.createTimer(ros::Duration(0.01), timerCallback, true);
+		}
+
+		void timerCallback() {
+			bool keep_going=true;
+			while(ros::OK && keep_going) {
+				ros::Time t = cache.getLatestTime();
+				std::vector< > v = cache.getInterval(t,t);
+				keep_going = updateFrontiers(v[0]);
+			}
 		}
 
 		void Map::callBack(const nav_msgs::OccupancyGrid& grid){
 			map = grid;
+			updateFrontiers();
 		}
 
-		void Map::updateFrontiers(){
+		bool Map::updateFrontiers(const nav_msgs::OccupancyGrid& map){
 			ROS_INFO("updating frontiers");
 			centroidsTransformed.clear();
-			MoveBaseClient ac("move_base", true);
 			FrontierSearches::FrontierSearch frontier_search(map, pose_handler);
 			frontiers = frontier_search.buildBidimensionalMap();
 			centroids = frontier_search.getCentroids(frontiers);
@@ -72,9 +92,11 @@ class Map {
   			ac.waitForResult();
   			if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
    			 	ROS_INFO("Got to goal");
+   			 	return true;
    			 }
   			else{
     			ROS_INFO("Did not get to goal");
+    			return false;
   			}
 		}	
 
@@ -84,6 +106,8 @@ int main(int argc, char **argv){
 
 	Map map;
 	map.initMap();
+	ros::spin();
+
 	return 0;
 }
 
