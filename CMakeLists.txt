@@ -136,6 +136,7 @@ include_directories(
    src/visualize_points.cpp
 )
 
+target_compile_options(frontier_detection_lib PUBLIC -g)
 
 target_link_libraries(frontier_detection_lib
   ${catkin_LIBRARIES}
@@ -221,6 +222,7 @@ target_link_libraries(frontier_detection_lib
 add_executable(MapPeeker src/MapPeeker.cpp)
 target_link_libraries(MapPeeker ${catkin_LIBRARIES})
 add_dependencies(MapPeeker frontier_with_loop_generate_messages_cpp)
+target_compile_options(MapPeeker PUBLIC -g)
 
 target_link_libraries(MapPeeker
   ${catkin_LIBRARIES}
