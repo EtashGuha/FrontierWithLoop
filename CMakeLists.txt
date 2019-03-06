@@ -236,8 +236,11 @@ add_dependencies(robot_pose frontier_with_loop_generate_messages_cpp)
 target_link_libraries(robot_pose
   ${catkin_LIBRARIES}
   frontier_detection_lib
-)	
-
+)
+add_executable(fast_march src/fast_march.cpp)
+target_link_libraries(fast_march ${catkin_LIBRARIES})
+add_dependencies(fast_march frontier_with_loop_generate_messages_cpp)
+	
 set(CMAKE_VERBOSE_MAKEFILE on)
 SET( CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -g")
 
