@@ -5,6 +5,7 @@
 #include "frontier_with_loop/frontier_search.h"
 #include "frontier_with_loop/pose_handler.h"
 #include "frontier_with_loop/visualize_points.h"
+#include "frontier_with_loop/fast_march.h"
 #include <visualization_msgs/Marker.h>
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
@@ -77,12 +78,28 @@ bool Map::updateFrontiers(nav_msgs::OccupancyGrid map){
 	frontiers = frontier_search.buildBidimensionalMap();
 	centroids = frontier_search.getCentroids(frontiers);
 	for(std::pair<int, int> coords: centroids){
+		printf("centroid x: %d, centroid y: %d", coords.second, coords.first);
 		std::pair<double, double> newCoords;
- 		newCoords.first = (double)coords.second * map.info.resolution + map.info.origin.position.x;
- 		newCoords.second =  (double)coords.first * map.info.resolution + map.info.origin.position.y;
+ 		newCoords.first = (double)coords.first * map.info.resolution + map.info.origin.position.x;
+ 		newCoords.second =  (double)coords.second * map.info.resolution + map.info.origin.position.y;
 		centroidsTransformed.push_back(newCoords);
 	}
 	visualizationPointer.visualize_lines(centroidsTransformed);
+	FastMarch::FastMarch fastMarch;
+	printf("CENTROID VAL: %d\n", centroids.front().first);
+	std::pair< std::pair<int, int>, std::pair<int, int>> closestFrontiers = fastMarch.march(map, centroids);
+
+	std::pair<double, double> firstFrontier;
+	std::pair<double, double> secondFrontier;
+
+	firstFrontier.first = (double)closestFrontiers.first.second * map.info.resolution + map.info.origin.position.x;
+	firstFrontier.second = (double)closestFrontiers.first.first * map.info.resolution + map.info.origin.position.y;
+
+
+	secondFrontier.first = (double)closestFrontiers.second.second * map.info.resolution + map.info.origin.position.x;
+	secondFrontier.second = (double)closestFrontiers.second.first * map.info.resolution + map.info.origin.position.y;
+	printf("First Pair: (%0.2f, %0.2f)   Second Pair: (%0.2f, %0.2f) \n", firstFrontier.first, firstFrontier.second, secondFrontier.first, secondFrontier.second);
+
 	move_base_msgs::MoveBaseGoal goal;
 
 	goal.target_pose.header.frame_id = "/map";
