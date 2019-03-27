@@ -25,6 +25,7 @@ namespace FastMarch{
 	FastMarch::FastMarch(){}
 
 	std::pair<coordinate, coordinate> FastMarch::march(nav_msgs::OccupancyGrid map, std::vector<std::pair<int,int>> frontierPoints){
+		printf("marching\n");
 		std::queue<point> q; 
 		std::unordered_map<coordinate, int, boost::hash<coordinate>> isLabeled;
 		std::unordered_map<coordinate, int, boost::hash<coordinate>> pointToDistance;
@@ -43,7 +44,14 @@ namespace FastMarch{
 	    	isLabeled[{frontierPoint.first, frontierPoint.second}] = label++;
 	    	pointToDistance[{frontierPoint.first, frontierPoint.second}] = 0;
 		}
-		printf("queue size %d \n", q.size());
+		printf("beginning while loop \n");
+		// for(auto element: labelToFrontierPoint){
+		// 	printf("%d %d\n", element.second.first, element.second.second);
+		// }
+		// std::pair<coordinate, coordinate> ans;
+		// return ans;
+		VisualizePoints::VisualizePointer visualizationPointer;
+		std::vector<std::pair<double, double>> pointsToHighlight;
 		while(q.size() != 0){
 			point p = q.front();
 			q.pop();
@@ -51,19 +59,20 @@ namespace FastMarch{
 				continue;
 			}
 			//printf("x: %d  y: %d\n", p.x, p.y);
-			if(map.data[p.y * map.info.width + p.x] > 0){
+			if(map.data[p.x * map.info.height + p.y] > 0){
 				continue;
 			}
 			if(isLabeled.count({p.x, p.y}) == 0){
 				isLabeled[{p.x, p.y}] = p.label;
 				pointToDistance[{p.x, p.y}] = p.distance;
-				continue;
+				
 			} else if(isLabeled[{p.x, p.y}] != p.label){
 				coordinate curr = labelToFrontierPoint[p.label];
 				coordinate next = labelToFrontierPoint[isLabeled[{p.x, p.y}]];
 				std::pair<coordinate, coordinate> ans;
 				ans.first = curr;
 				ans.second = next;
+				printf("BEFORE CONVERSION: FIRST PAIR : (%d, %d)   SECOND PAIR: (%d, %d\n", curr.first, curr.second, next.first, next.second);
 				return ans;
 			} else if(p.distance < pointToDistance[{p.x, p.y}]) {
 				pointToDistance[{p.x, p.y}] = p.distance;
@@ -93,6 +102,7 @@ namespace FastMarch{
 			nextPointFour.y = p.y - 1;
 			q.push(nextPointFour);
 		}
+
 	}
 }
 

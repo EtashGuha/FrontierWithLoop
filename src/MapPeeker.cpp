@@ -22,6 +22,7 @@ class Map {
 	public:
 		PoseHandlers::PoseHandler pose_handler;
 		std::vector<std::pair<int, int> > centroids;
+		std::vector<std::pair<int, int> > centroidsReversed;
 		std::vector<std::vector<std::pair<int, int>>>frontiers;
 		VisualizePoints::VisualizePointer visualizationPointer;
 		std::vector<std::pair<double, double>> centroidsTransformed;
@@ -44,6 +45,8 @@ Map::Map(): n(), ac(n, "move_base", true) {}//, sub(n, "/move_base/global_costma
 
 void Map::initMap(){
 	ROS_INFO("Starting first subcriber");
+	n.setParam("/move_base/global_costmap/always_send_full_costmap", true);
+	n.setParam("/move_base/global_costmap/costmap/always_send_full_costmap", true);
 	sub = std::make_shared<message_filters::Subscriber<nav_msgs::OccupancyGrid> >(n, "/move_base/global_costmap/costmap", 10);
 	cache = std::make_shared<message_filters::Cache<nav_msgs::OccupancyGrid> >(*sub,100);
 
@@ -54,7 +57,7 @@ void Map::initMap(){
 }
 
 void Map::cb(nav_msgs::OccupancyGrid map){
-	ROS_INFO_STREAM("Got message with time " << map.header.stamp);
+	//ROS_INFO_STREAM("Got message with time " << map.header.stamp);
 }
 
 void Map::timerCallback(const ros::TimerEvent& e) {
@@ -72,13 +75,19 @@ void Map::timerCallback(const ros::TimerEvent& e) {
 }
 
 bool Map::updateFrontiers(nav_msgs::OccupancyGrid map){
-	ROS_INFO("updating frontiers");
+	//ROS_INFO("updating frontiers");
 	centroidsTransformed.clear();
+	centroids.clear();
 	FrontierSearches::FrontierSearch frontier_search(map, pose_handler);
 	frontiers = frontier_search.buildBidimensionalMap();
-	centroids = frontier_search.getCentroids(frontiers);
+	centroidsReversed = frontier_search.getCentroids(frontiers);
+	for(std::pair<int, int> coords: centroidsReversed){
+		std::pair<int, int> currCoordinate;
+		currCoordinate.first = coords.second;
+		currCoordinate.second = coords.first;
+		centroids.push_back(currCoordinate);
+	}
 	for(std::pair<int, int> coords: centroids){
-		printf("centroid x: %d, centroid y: %d", coords.second, coords.first);
 		std::pair<double, double> newCoords;
  		newCoords.first = (double)coords.first * map.info.resolution + map.info.origin.position.x;
  		newCoords.second =  (double)coords.second * map.info.resolution + map.info.origin.position.y;
@@ -86,20 +95,14 @@ bool Map::updateFrontiers(nav_msgs::OccupancyGrid map){
 	}
 	visualizationPointer.visualize_lines(centroidsTransformed);
 	FastMarch::FastMarch fastMarch;
-	printf("CENTROID VAL: %d\n", centroids.front().first);
 	std::pair< std::pair<int, int>, std::pair<int, int>> closestFrontiers = fastMarch.march(map, centroids);
-
-	std::pair<double, double> firstFrontier;
-	std::pair<double, double> secondFrontier;
-
-	firstFrontier.first = (double)closestFrontiers.first.second * map.info.resolution + map.info.origin.position.x;
-	firstFrontier.second = (double)closestFrontiers.first.first * map.info.resolution + map.info.origin.position.y;
-
-
-	secondFrontier.first = (double)closestFrontiers.second.second * map.info.resolution + map.info.origin.position.x;
-	secondFrontier.second = (double)closestFrontiers.second.first * map.info.resolution + map.info.origin.position.y;
-	printf("First Pair: (%0.2f, %0.2f)   Second Pair: (%0.2f, %0.2f) \n", firstFrontier.first, firstFrontier.second, secondFrontier.first, secondFrontier.second);
-
+	printf("FIRST PAIR: (%0.2f, %0.2f) SECOND PAIR: (%0.2f, %0.2f)\n",
+		(double)closestFrontiers.first.first * map.info.resolution + map.info.origin.position.x,
+		(double)closestFrontiers.first.second * map.info.resolution + map.info.origin.position.y,
+		(double)closestFrontiers.second.first * map.info.resolution + map.info.origin.position.x,
+		(double)closestFrontiers.second.second * map.info.resolution + map.info.origin.position.y);
+		
+	printf("done with fast march\n");
 	move_base_msgs::MoveBaseGoal goal;
 
 	goal.target_pose.header.frame_id = "/map";
