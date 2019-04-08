@@ -48,7 +48,7 @@ void Map::initMap(){
 	n.setParam("/move_base/global_costmap/always_send_full_costmap", true);
 	n.setParam("/move_base/global_costmap/costmap/always_send_full_costmap", true);
 	sub = std::make_shared<message_filters::Subscriber<nav_msgs::OccupancyGrid> >(n, "/move_base/global_costmap/costmap", 10);
-	cache = std::make_shared<message_filters::Cache<nav_msgs::OccupancyGrid> >(*sub,100);
+	cache = std::make_shared<message_filters::Cache<nav_msgs::OccupancyGrid> >(*sub,1);
 
 	sub->registerCallback(&Map::cb,this);
 
@@ -96,18 +96,18 @@ bool Map::updateFrontiers(nav_msgs::OccupancyGrid map){
 	visualizationPointer.visualize_lines(centroidsTransformed);
 	FastMarch::FastMarch fastMarch;
 	std::pair< std::pair<int, int>, std::pair<int, int>> closestFrontiers = fastMarch.march(map, centroids);
-	printf("FIRST PAIR: (%0.2f, %0.2f) SECOND PAIR: (%0.2f, %0.2f)\n",
-		(double)closestFrontiers.first.first * map.info.resolution + map.info.origin.position.x,
-		(double)closestFrontiers.first.second * map.info.resolution + map.info.origin.position.y,
-		(double)closestFrontiers.second.first * map.info.resolution + map.info.origin.position.x,
-		(double)closestFrontiers.second.second * map.info.resolution + map.info.origin.position.y);
+	// printf("FIRST PAIR: (%0.2f, %0.2f) SECOND PAIR: (%0.2f, %0.2f)\n",
+	// 	(double)closestFrontiers.first.first * map.info.resolution + map.info.origin.position.x,
+	// 	(double)closestFrontiers.first.second * map.info.resolution + map.info.origin.position.y,
+	// 	(double)closestFrontiers.second.first * map.info.resolution + map.info.origin.position.x,
+	// 	(double)closestFrontiers.second.second * map.info.resolution + map.info.origin.position.y);
 		
 	printf("done with fast march\n");
 	move_base_msgs::MoveBaseGoal goal;
 
 	goal.target_pose.header.frame_id = "/map";
-	goal.target_pose.pose.position.x = ((*centroidsTransformed.begin()).first);
-	goal.target_pose.pose.position.y = ((*centroidsTransformed.begin()).second);
+	goal.target_pose.pose.position.x = ((double)closestFrontiers.first.first * map.info.resolution + map.info.origin.position.x);
+	goal.target_pose.pose.position.y = ((double)closestFrontiers.first.second * map.info.resolution + map.info.origin.position.y);
 	goal.target_pose.pose.orientation.w = 1.0;
 	ac.sendGoal(goal);
 	ac.waitForResult();
